@@ -4,6 +4,7 @@ const path = require('path');
 const inputPath = path.join(__dirname, 'index.html');
 const outDir = path.join(__dirname, 'dist');
 const outPath = path.join(outDir, 'index.html');
+const GA_MEASUREMENT_ID = 'G-VPY018B4H3';
 
 let html = fs.readFileSync(inputPath, 'utf8');
 
@@ -52,6 +53,70 @@ if (!html.includes('/* Ícones clínicos e nutricionais */')) {
   html = html.replace('</style>', `${iconCss}</style>`);
 }
 
+// Domínio canônico oficial
+html = html.replaceAll('https://nutrivitoriabraga.com.br/', 'https://www.nutrivitoriabraga.com.br/');
+
+// Google Analytics 4
+const googleTag = `
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${GA_MEASUREMENT_ID}');
+</script>`;
+
+if (!html.includes(`googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`)) {
+  html = html.replace('</head>', `${googleTag}\n</head>`);
+}
+
+// Eventos de intenção de consulta. Não enviamos dados clínicos nem conteúdo de formulários.
+const analyticsEvents = `
+<script>
+/* GA4 conversion events */
+(function () {
+  function sendEvent(eventName, link) {
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', eventName, {
+      link_url: link.href || '',
+      link_text: (link.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 120),
+      page_location: window.location.href
+    });
+  }
+
+  document.addEventListener('click', function (event) {
+    const link = event.target.closest('a');
+    if (!link) return;
+
+    const href = link.href || '';
+    const text = (link.textContent || '').toLowerCase();
+
+    if (href.includes('wa.me/')) {
+      sendEvent('click_whatsapp', link);
+      return;
+    }
+
+    if (href.includes('doctoralia.com.br')) {
+      if (text.includes('agendar') || text.includes('horário') || text.includes('horarios') || text.includes('consulta')) {
+        sendEvent('click_agendar', link);
+      } else {
+        sendEvent('click_doctoralia', link);
+      }
+      return;
+    }
+
+    if (href.includes('google.com/maps') || href.includes('maps.google')) {
+      sendEvent('click_google_maps', link);
+    }
+  });
+})();
+</script>`;
+
+if (!html.includes('/* GA4 conversion events */')) {
+  html = html.replace('</body>', `${analyticsEvents}\n</body>`);
+}
+
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(outPath, html, 'utf8');
@@ -61,4 +126,4 @@ for (const file of ['404.html', 'favicon.svg', 'robots.txt', 'sitemap.xml', 'goo
   if (fs.existsSync(source)) fs.copyFileSync(source, path.join(outDir, file));
 }
 
-console.log('Site gerado com ícones atualizados sem alterar as imagens embutidas do index.html.');
+console.log('Site gerado com ícones, domínio canônico e GA4 sem alterar as imagens embutidas do index.html.');
