@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nutrivitoriabraga.com.br/sitemap.xml
+Sitemap: https://www.nutrivitoriabraga.com.br/sitemap.xml
