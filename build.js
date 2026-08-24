@@ -56,7 +56,7 @@ fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(outPath, html, 'utf8');
 
-for (const file of ['404.html', 'favicon.svg', 'robots.txt', 'sitemap.xml']) {
+for (const file of ['404.html', 'favicon.svg', 'robots.txt', 'sitemap.xml', 'googlef584426b5a709e5e.html']) {
   const source = path.join(__dirname, file);
   if (fs.existsSync(source)) fs.copyFileSync(source, path.join(outDir, file));
 }
